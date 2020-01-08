@@ -56,7 +56,7 @@ def V_gate(gamma, n_photons):
     """
     Qubic phase gate
     """
-    return expm(1.j*gamma/3.*(destroy_operator(n_photons) + create_operator(n_photons))**3)
+    return expm(1.j*gamma/3.*(destroy_operator(n_photons) + create_operator(n_photons))**3/np.sqrt(8.))
 
 def N_phase_gate(gamma, degree, n_photons):
     """
