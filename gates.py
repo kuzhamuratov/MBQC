@@ -44,7 +44,7 @@ def R_gate(theta, n_photons):
     """
     Rotation gate
     """
-    return expm(1.j*theta*create_operator(n_photons)*destroy_operator(n_photons))
+    return expm(1.j*theta*create_operator(n_photons).dot(destroy_operator(n_photons)))
 
 def P_gate(s, n_photons):
     """
@@ -56,13 +56,13 @@ def V_gate(gamma, n_photons):
     """
     Qubic phase gate
     """
-    return expm(1.j*gamma/3.*(destroy_operator(n_photons) + create_operator(n_photons))**3/np.sqrt(8.))
+    return expm(1.j*gamma/3.*np.linalg.matrix_power(destroy_operator(n_photons) + create_operator(n_photons), 3)/np.sqrt(8.))
 
 def N_phase_gate(gamma, degree, n_photons):
     """
     N-phase gate
     """
-    return expm(1.j*gamma/float(degree)*(destroy_operator(n_photons) + create_operator(n_photons))**degree)
+    return expm(1.j*gamma/float(degree)*np.linalg.matrix_power(destroy_operator(n_photons) + create_operator(n_photons), degree))
 
 def F_gate(n_photons):
     """
