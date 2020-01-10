@@ -36,7 +36,7 @@ def D_gate(r, phi, n_photons):
 
 def X_gate(x, n_photons):
     """
-    Displacement gate
+    Displacement gate on X axis
     """
     batch_size = x.shape[0]
     x = x.reshape(batch_size, 1, 1)
