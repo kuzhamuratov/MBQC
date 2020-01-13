@@ -17,7 +17,7 @@ def S_gate(r, phi, n_photons):
     Squeezing gate
     """
     z = r*np.exp(phi*1j)
-    batch_size = z.shape[0]
+    batch_size = 1 if len(z.shape)==0 else z.shape[0]
     z = z.reshape(batch_size, 1, 1)
     eq = np.multiply(z.conj(), np.linalg.matrix_power(destroy_operator(batch_size, n_photons),2)) -\
          np.multiply(z, np.linalg.matrix_power(create_operator(batch_size, n_photons),2))
@@ -28,7 +28,7 @@ def D_gate(r, phi, n_photons):
     Displacement gate
     """
     alpha = r*np.exp(phi*1.j)
-    batch_size = alpha.shape[0]
+    batch_size = 1 if len(alpha.shape)==0 else alpha.shape[0]
     alpha = alpha.reshape(batch_size, 1, 1)
     eq = np.multiply(alpha, create_operator(batch_size, n_photons)) -\
          np.multiply(alpha.conj(), destroy_operator(batch_size, n_photons))
@@ -38,7 +38,7 @@ def X_gate(x, n_photons):
     """
     Displacement gate on X axis
     """
-    batch_size = x.shape[0]
+    batch_size = 1 if len(x.shape)==0 else x.shape[0]
     x = x.reshape(batch_size, 1, 1)
     eq = np.multiply(x, create_operator(batch_size,n_photons) 
            - destroy_operator(batch_size, n_photons))/np.sqrt(2.)
@@ -48,7 +48,7 @@ def Z_gate(p, n_photons):
     """
     momentum displacement gate
     """
-    batch_size = p.shape[0]
+    batch_size = 1 if len(p.shape)==0 else p.shape[0]
     p = p.reshape(batch_size, 1, 1)
     eq = np.multiply(p, destroy_operator(batch_size, n_photons) +
              create_operator(batch_size, n_photons))/np.sqrt(2.)
@@ -58,7 +58,7 @@ def R_gate(theta, n_photons):
     """
     Rotation gate
     """
-    batch_size = theta.shape[0]
+    batch_size = 1 if len(theta.shape)==0 else theta.shape[0]
     theta = theta.reshape(batch_size, 1, 1)
     number_operator = np.einsum('ijk, ikl-> ijl', create_operator(batch_size, n_photons), 
                       destroy_operator(batch_size, n_photons))
@@ -78,7 +78,7 @@ def V_gate(gamma, n_photons):
     """
     Qubic phase gate
     """
-    batch_size = gamma.shape[0]
+    batch_size = 1 if len(gamma.shape)==0 else gamma.shape[0]
     gamma = gamma.reshape(batch_size, 1, 1)
     eq = np.multiply(gamma, np.linalg.matrix_power(destroy_operator(batch_size, n_photons) +
                 create_operator(batch_size, n_photons), 3))
@@ -88,7 +88,7 @@ def N_phase_gate(gamma, degree, n_photons):
     """
     N-phase gate
     """
-    batch_size = gamma.shape[0]
+    batch_size = 1 if len(gamma.shape)==0 else gamma.shape[0]
     gamma = gamma.reshape(batch_size, 1, 1)
     eq = np.multiply(gamma, np.linalg.matrix_power(destroy_operator(batch_size, n_photons) +
           create_operator(batch_size, n_photons), degree))

@@ -20,7 +20,7 @@ def meas_P(state, n_photons):
     return meas_X_theta(state, np.pi/2., n_photons)
 
 def meas_X_theta(state, theta, n_photons, x_max=20, 
-                 x_min=-20, num_bins=10_000, instances_size=100_000):
+                 x_min=-20, num_bins=10_000, instances_size=10_000):
     """
     Measurement on X_theta quadrature
     """
