@@ -71,7 +71,8 @@ def P_gate(batch_size, n_photons):
     args:
     first batch_size !!!!!
     """
-    eq = (destroy_operator(batch_size, n_photons) + create_operator(batch_size, n_photons))/4.
+    eq = (destroy_operator(batch_size, n_photons) + create_operator(batch_size, n_photons))
+    eq = np.linalg.matrix_power(eq, 2)/4.
     return np.array([expm(1.j*eq[i]) for i in range(batch_size)])
 
 def V_gate(gamma, n_photons):

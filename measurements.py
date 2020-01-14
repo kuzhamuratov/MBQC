@@ -28,18 +28,13 @@ def meas_X_theta(state, theta, n_photons, x_max=20,
     theta = theta*np.ones(batch_size)
     rotation = R_gate(-theta, n_photons)
     state = np.einsum('ijk, ik -> ij', rotation, state)
-    
-    x = [x_min + (x_max - x_min)/(num_bins + 1)*i for i in range(num_bins+1)]
-    probs = []
+    x = np.linspace(x_min, x_max, num_bins+1)
     new_state = calc_coef(state, n_photons)
     new_state = new_state.transpose(1,0)
-    for x_inst in x:
-        prob_x_inst = 1./np.pi**0.25*np.exp(-x_inst**2/2.)*hermval(x_inst, new_state)
-        probs.append(np.abs(prob_x_inst*np.conj(prob_x_inst)))
-    probs = np.array(probs)
-
-    probs = probs/np.sum(probs, axis=0)
+    ampl = 1./np.pi**0.25*np.exp(-x**2/2.)*hermval(x, new_state)
+    probs = np.abs(ampl*np.conj(ampl))
+    probs /= np.sum(probs, axis=1).reshape(batch_size,1)
     data = np.zeros((batch_size, instances_size))
     for i in range(batch_size):
-        data[i] = np.random.choice(x, size=instances_size, p=probs[:,i])
+        data[i] = np.random.choice(x, size=instances_size, p=probs[i,:])
     return data
