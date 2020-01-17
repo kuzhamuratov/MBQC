@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.polynomial.hermite import hermval
 from scipy.special import factorial
-from gates_no_batch import R_gate
+from gates import R_gate
 def calc_coef(state, n_photons):
     for i in range(n_photons):
         state[i] = state[i]*1./np.sqrt(factorial(i))*2**(-i/2.)
@@ -20,7 +20,7 @@ def meas_P(state, n_photons):
     return meas_X_theta(state, np.pi/2., n_photons)
 
 def meas_X_theta(state, theta, n_photons, x_max=5, 
-                 x_min=-5, num_bins=1_000_000, instances_size=1_000_000):
+                 x_min=-5, num_bins=10_000, instances_size=10_000):
     """
     Measurement on X_theta quadrature
     """

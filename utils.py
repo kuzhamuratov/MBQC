@@ -1,5 +1,6 @@
 import scipy as sp
 import numpy as np
+import math
 def wigner_iterative(rho, xvec, yvec, g=np.sqrt(2)):
     """Wigner function for a state vector or density matrix at points
     `xvec + i * yvec`.
@@ -71,3 +72,61 @@ def wigner_iterative(rho, xvec, yvec, g=np.sqrt(2)):
             w += 2 * sp.real(rho[m, n] * w_list[n])
  
     return 0.5 * w * g ** 2
+
+
+def fidelity(rho,rho_target):
+    """Computes fidelity between two states represented by density matrices.
+
+    Parameters
+    ----------
+    rho, rho_target : np.array
+        Density matrices.
+
+    Returns
+    -------
+    fidelity : float
+    """
+    
+    sqrt_target = sp.linalg.sqrtm(rho_target)
+    
+    return np.abs(np.einsum('ii->',sp.linalg.sqrtm(sqrt_target @ rho @ sqrt_target))**2)
+
+def ptrace(state, sel, cutoff_n):
+    """Partial trace of the density matrix with selected components remaining.
+    Parameters
+    ----------
+    state : Density matrix of a multimode quantum state.
+    
+    sel : int/list
+        An ``int`` or ``list`` of components to keep after partial trace.
+    
+    cutoff_n : int
+        Photon cutoff number
+        
+    Returns
+    -------
+    rhomat : Density matrix representing partial trace with selected components
+        remaining.
+    """
+    
+    rd = np.asarray([cutoff_n+1]*int(math.log(state.shape[0],cutoff_n+1)))
+    nd = len(rd)
+    if isinstance(sel, int):
+        sel = np.array([sel])
+    else:
+        sel = np.asarray(sel)
+    sel = list(np.sort(sel))
+    dkeep = (rd[sel]).tolist()
+    qtrace = list(set(np.arange(nd)) - set(sel))
+    dtrace = (rd[qtrace]).tolist()
+    rd = list(rd)
+    
+    rhomat = np.trace(state.reshape(rd + rd) \
+                          .transpose(qtrace + [nd + q for q in qtrace] +
+                                     sel + [nd + q for q in sel]) \
+                          .reshape([np.prod(dtrace),
+                                    np.prod(dtrace),
+                                    np.prod(dkeep),
+                                    np.prod(dkeep)]))
+    
+    return rhomat
