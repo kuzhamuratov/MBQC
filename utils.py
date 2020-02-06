@@ -1,8 +1,12 @@
 import scipy as sp
 import numpy as np
 import math
+
 def wigner_iterative(rho, xvec, yvec, g=np.sqrt(2)):
-    """Wigner function for a state vector or density matrix at points
+
+    """
+
+      Wigner function for a state vector or density matrix at points
     `xvec + i * yvec`.
  
     Parameters
@@ -109,7 +113,7 @@ def ptrace(state, sel, cutoff_n):
         remaining.
     """
     
-    rd = np.asarray([cutoff_n+1]*int(math.log(state.shape[0],cutoff_n+1)))
+    rd = np.asarray([cutoff_n+1]*int(math.log(state.shape[0],cutoff_n+1)+0.1))
     nd = len(rd)
     if isinstance(sel, int):
         sel = np.array([sel])
@@ -130,3 +134,6 @@ def ptrace(state, sel, cutoff_n):
                                     np.prod(dkeep)]))
     
     return rhomat
+
+def calc_squeezing_after_loss(eta, last_sq=np.inf):
+    return -0.5*np.log(eta*np.exp(-2*last_sq) + 0.5*(1-eta))

@@ -127,4 +127,3 @@ def F_gate(numb_mode, n_modes, n_photons):
     args:
     """
     return R_gate(np.pi/2., numb_mode, n_modes, n_photons)
-    
