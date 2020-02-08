@@ -1,10 +1,10 @@
-import scipy as sp
 import numpy as np
 import math
+from scipy import meshgrid, copy, real
+from scipy.linalg import sqrtm
+def wigner_iterative(rho, xvec, yvec, g=np.sqrt(2.)):
 
-def wigner_iterative(rho, xvec, yvec, g=np.sqrt(2)):
-
-    """
+    r"""
 
       Wigner function for a state vector or density matrix at points
     `xvec + i * yvec`.
@@ -49,7 +49,7 @@ def wigner_iterative(rho, xvec, yvec, g=np.sqrt(2)):
     """
  
     m_max = int(np.prod(rho.shape[0]))
-    x, y = sp.meshgrid(xvec, yvec)
+    x, y = meshgrid(xvec, yvec)
     a = 0.5 * g * (x + 1.0j * y)
  
     w_list = np.array([np.zeros(np.shape(a), dtype=complex) for k in range(m_max)])
@@ -61,19 +61,19 @@ def wigner_iterative(rho, xvec, yvec, g=np.sqrt(2)):
         w += 2 * np.real(rho[0, n] * w_list[n])
  
     for m in range(1, m_max):
-        temp = sp.copy(w_list[m])
+        temp = copy(w_list[m])
         w_list[m] = (2 * np.conj(a) * temp - np.sqrt(m) * w_list[m - 1]) / np.sqrt(m)
  
         # w_list[m] = Wigner function for |m><m|
-        w += sp.real(rho[m, m] * w_list[m])
+        w += real(rho[m, m] * w_list[m])
  
         for n in range(m + 1, m_max):
             temp2 = (2 * a * w_list[n - 1] - np.sqrt(m) * temp) / np.sqrt(n)
-            temp = sp.copy(w_list[n])
+            temp = copy(w_list[n])
             w_list[n] = temp2
  
             # w_list[n] = Wigner function for |m><n|
-            w += 2 * sp.real(rho[m, n] * w_list[n])
+            w += 2 * real(rho[m, n] * w_list[n])
  
     return 0.5 * w * g ** 2
 
@@ -91,9 +91,9 @@ def fidelity(rho,rho_target):
     fidelity : float
     """
     
-    sqrt_target = sp.linalg.sqrtm(rho_target)
+    sqrt_target = sqrtm(rho_target)
     
-    return np.abs(np.einsum('ii->',sp.linalg.sqrtm(sqrt_target @ rho @ sqrt_target))**2)
+    return np.abs(np.einsum('ii->', sqrtm(sqrt_target @ rho @ sqrt_target))**2)
 
 def ptrace(state, sel, cutoff_n):
     """Partial trace of the density matrix with selected components remaining.

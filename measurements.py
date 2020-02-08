@@ -3,7 +3,7 @@ import itertools
 from numpy.polynomial.hermite import hermval
 from scipy.special import factorial
 from .gates import R_gate, BS_gate, D_gate, tensor_product
-from .states import infinite_squeezing, fock_state
+from .states import infinite_squeezing, fock_state, vacuum
 from .utils import ptrace
 
 # For rho matrix
@@ -89,8 +89,29 @@ def proba_rho(rho, x_pret, n_modes, n_photons):
                          hermval(x_pret[:,5], matrix), hermval(x_pret[:,5], matrix),
                          matrix_indexex)
 
+    elif n_modes==7:
+        part = np.einsum('impdbfxjnqeczy, il, jl, ml, nl, pl, ql, dl, el, bl, cl, fl, zl, xl, yl, impdbfxjnqeczy -> l', rho, 
+                         hermval(x_pret[:,0], matrix), hermval(x_pret[:,0], matrix), 
+                         hermval(x_pret[:,1], matrix), hermval(x_pret[:,1], matrix),
+                         hermval(x_pret[:,2], matrix), hermval(x_pret[:,2], matrix),
+                         hermval(x_pret[:,3], matrix), hermval(x_pret[:,3], matrix),
+                         hermval(x_pret[:,4], matrix), hermval(x_pret[:,4], matrix),
+                         hermval(x_pret[:,5], matrix), hermval(x_pret[:,5], matrix),
+                         hermval(x_pret[:,6], matrix), hermval(x_pret[:,6], matrix),
+                         matrix_indexex)
+    elif n_modes==8:
+        part = np.einsum('impdbfxgjnqeczyh, il, jl, ml, nl, pl, ql, dl, el, bl, cl, fl, zl, xl, yl, gl, hl, impdbfxgjnqeczyh -> l', rho, 
+                         hermval(x_pret[:,0], matrix), hermval(x_pret[:,0], matrix), 
+                         hermval(x_pret[:,1], matrix), hermval(x_pret[:,1], matrix),
+                         hermval(x_pret[:,2], matrix), hermval(x_pret[:,2], matrix),
+                         hermval(x_pret[:,3], matrix), hermval(x_pret[:,3], matrix),
+                         hermval(x_pret[:,4], matrix), hermval(x_pret[:,4], matrix),
+                         hermval(x_pret[:,5], matrix), hermval(x_pret[:,5], matrix),
+                         hermval(x_pret[:,6], matrix), hermval(x_pret[:,6], matrix),
+                         hermval(x_pret[:,7], matrix), hermval(x_pret[:,7], matrix),
+                         matrix_indexex)                     
     else:
-        raise NotImplementedError('Not implemented for n_modes>6')
+        raise NotImplementedError('Not implemented for n_modes>8')
         
     return np.abs(part*part.conj())*np.pi**n_modes*np.prod(np.exp(-2*x_pret**2),axis=1)
 
@@ -162,6 +183,7 @@ def project_homodyne(rho, modes_to_project, n_modes, n_photons, x=[], phi=None):
 
     # TO DO phi
     phi = [0.]*len(modes_to_project) 
+
     ## projection
     operations = []
     for ind, _ in enumerate(modes_to_project):
@@ -186,6 +208,7 @@ def project_homodyne(rho, modes_to_project, n_modes, n_photons, x=[], phi=None):
     normalization = np.trace(rho_out)
     
     return rho_out/normalization
+
 
 ## main functions
 def meas_X_rho(rho, modes_to_measure, n_modes, n_photons, proj='projection', flag='full'):
@@ -229,8 +252,50 @@ def meas_X_theta_rho(rho, theta, modes_to_measure, n_modes, n_photons, proj='pro
        rho_out = project_homodyne(rho, modes_to_measure, n_modes, n_photons, x=sample_x[0])
        return sample_x, rho_out
     
-    if proj=='simXP':
-        pass
+    if proj=='simXP' and flag=='full':
+        # preparing vacuum additions
+        for i in range(1, n_modes+1):
+            idler_state = np.kron(vacuum(n_photons), idler_state) if i!=1 else vacuum(n_photons)
+            
+        idler_state = idler_state.reshape(idler_state.shape[0], 1)
+        idler_rho = np.kron(idler_state, idler_state.conj().T)
+        rho_sim = np.kron(rho, idler_rho) # 2*n_modes
+
+        # homodyne rotations
+        phi_ = np.pi/2.
+        theta_ = np.pi/4.
+        for i in range(1, n_modes+1):
+            gate0 = BS_gate(theta_, phi_, i, n_modes+i, 2*n_modes, n_photons)
+            rho_sim_ = gate0 @ rho_sim @ gate0.conj().T
+            gate1 = R_gate(-np.pi/2., i, 2*n_modes, n_photons)
+            rho_sim_ = gate1 @ rho_sim_ @ gate1.conj().T
+        return bootstrap_rho(rho_sim_, 2*n_modes, n_photons)
+    
+    if proj=='simXP' and flag=='part':
+        reduced_rho = ptrace(rho_rotate, list(map(lambda x: x - 1, modes_to_measure)), n_photons-1)
+        # preparing vacuum additions
+        active_modes = len(modes_to_measure)
+        for i in range(active_modes):
+            idler_state = np.kron(vacuum(n_photons), idler_state) if i!=0 else vacuum(n_photons)
+        
+        idler_state = idler_state.reshape(idler_state.shape[0], 1)
+        idler_rho = np.kron(idler_state, idler_state.conj().T)
+        rho_sim = np.kron(reduced_rho, idler_rho) # 2*modes_to_measure
+
+        # homodyne rotations
+        phi_ = np.pi/2.
+        theta_ = np.pi/4.
+        for i in range(1, active_modes+1):
+            gate = BS_gate(theta_, phi_, i, n_modes+i, 2*active_modes, n_photons)
+            rho_sim_ = gate @ rho_sim @ gate.conj().T
+            gate = R_gate(-np.pi/2, i, 2*active_modes, n_photons)
+            rho_sim_ = gate @ rho_sim_ @ gate.conj().T
+        
+        sample_x = bootstrap_rho(rho_sim_, len(modes_to_measure), n_photons, 1)[:,:active_modes]
+        rho_out = project_homodyne(rho, modes_to_measure, n_modes, n_photons, x=sample_x[0])
+        return sample_x, rho_out
+
+
 
 
 def project_fock(rho, photon_number, n_mode, n_modes, n_photons):
