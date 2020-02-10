@@ -296,18 +296,23 @@ def meas_X_theta_rho(rho, theta, modes_to_measure, n_modes, n_photons, proj='pro
         return sample_x, rho_out
 
 
-
-
-def project_fock(rho, photon_number, n_mode, n_modes, n_photons):
+def project_fock(rho, photon_number, modes_to_measure, n_modes, n_photons):
     """
     projection on fock basis.
+    args: rho matrix is in (n_photons**n_modes, n_photons**n_modes) shape
+         photon_number list of photon state on which to project
+         modes_to_measure list of modes on which to project
+         n_modes munber of modes 1, 2,...., n_modes
+         n_photons number of photons
+    output: rho_reduced or probability if n_modes==len(modes_to_measure) + 1
     """
-    proj_state = fock_state(photon_number, n_photons)
-    proj_state = proj_state.reshape(proj_state.shape[0], 1)
-    rho_proj = np.kron(proj_state, proj_state.conj().T)
-    projector = tensor_product(rho_proj, n_mode, n_modes, n_photons)
-    rho_projected = projector @ rho @ projector.conj().T
-    rho_out = ptrace(rho_projected, n_mode-1, n_photons-1)
-    probability = np.trace(rho_out)
-    return rho_out/probability, probability
-
+    rho_reshaped = reshaping_rho(rho, n_modes, n_photons)
+    final_list = []
+    for i in range(1, n_modes+1):
+        if i <= len(modes_to_measure):
+            if i==modes_to_measure[i-1]:
+                final_list.append(photon_number[i-1])
+        else:
+            final_list.append(slice(0, n_photons))
+    final_rho = rho_reshaped[tuple(final_list*2)]
+    return final_rho/np.trace(final_rho), np.real(np.trace(final_rho))
