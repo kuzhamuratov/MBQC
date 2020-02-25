@@ -281,7 +281,6 @@ def meas_X_theta_rho(rho, theta, modes_to_measure, n_modes, n_photons, proj='pro
         idler_state = idler_state.reshape(idler_state.shape[0], 1)
         idler_rho = np.kron(idler_state, idler_state.conj().T)
         rho_sim = np.kron(reduced_rho, idler_rho) # 2*modes_to_measure
-
         # homodyne rotations
         phi_ = np.pi/2.
         theta_ = np.pi/4.
@@ -290,10 +289,10 @@ def meas_X_theta_rho(rho, theta, modes_to_measure, n_modes, n_photons, proj='pro
             rho_sim_ = gate @ rho_sim @ gate.conj().T
             gate = R_gate(-np.pi/2, i, 2*active_modes, n_photons)
             rho_sim_ = gate @ rho_sim_ @ gate.conj().T
-        
-        sample_x = bootstrap_rho(rho_sim_, len(modes_to_measure), n_photons, 1)[:,:active_modes]
+        sample_xp = bootstrap_rho(rho_sim_, 2*active_modes, n_photons, 1)
+        sample_x = sample_xp[:,:active_modes]
         rho_out = project_homodyne(rho, modes_to_measure, n_modes, n_photons, x=sample_x[0])
-        return sample_x, rho_out
+        return sample_xp, rho_out
 
 
 def project_fock(rho, photon_number, modes_to_measure, n_modes, n_photons):

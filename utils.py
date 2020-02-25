@@ -78,7 +78,7 @@ def wigner_iterative(rho, xvec, yvec, g=np.sqrt(2.)):
     return 0.5 * w * g ** 2
 
 
-def fidelity(rho,rho_target):
+def fidelity(rho, rho_target):
     """Computes fidelity between two states represented by density matrices.
 
     Parameters
